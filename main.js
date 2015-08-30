@@ -160,7 +160,7 @@ function filter(gender, location) {
 	if(showingGender === 'all')
 		gender = '';
 	else
-		gender = '.' + gender;
+		gender = '.' + showingGender;
 	if(showingLocation === 'all')
 		$(gender).show();
 	else {
