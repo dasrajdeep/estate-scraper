@@ -2,7 +2,7 @@
 
 var groupID = '263827920387171';
 var locations = null;
-var limit = 50;
+var limit = 100;
 
 var showingGender = 'all';
 var showingLocation = 'all';

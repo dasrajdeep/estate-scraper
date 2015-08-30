@@ -1,7 +1,7 @@
 <html>
 
 <head>
-	<title>Stay</title>
+	<title>Estate Scraper</title>
 	<link rel="stylesheet" href="bootstrap.min.css" />
 	<script type="text/javascript" src="jquery.min.js"></script>
 	<script type="text/javascript" src="bootstrap.min.js"></script>
