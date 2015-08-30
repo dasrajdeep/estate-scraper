@@ -161,7 +161,9 @@ function filter(gender, location) {
 		gender = '';
 	else
 		gender = '.' + showingGender;
-	if(showingLocation === 'all')
+	if(showingLocation === 'all' && showingGender === 'all')
+		$('.message').parent().show();
+	else if(showingLocation === 'all')
 		$(gender).show();
 	else {
 		var mids = postedLocations[showingLocation];
