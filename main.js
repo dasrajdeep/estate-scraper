@@ -34,9 +34,17 @@ $(document).ready(function() {
 			locations[i] = locations[i].substring(1, locations[i].length - 1).toLowerCase();
 	});
 	handlers();
+	$.material.init();
 });
 
 function onLogin() {
+	FB.api('/' + groupID, function(response) {
+		if (!response || response.error)
+			console.log('An error occurred!');
+		else {
+			$('#group-name').text(response.name);
+		}	
+	});
 	FB.api('/' + groupID + '/feed', 'get', { limit: limit}, function(response) {
 		if (!response || response.error)
 			console.log('An error occurred!');
@@ -45,6 +53,7 @@ function onLogin() {
 			var paging = response.paging;
 			displayPosts(data);
 			searchLocations();
+			fetchDetails();
 		}
 	});
 }
@@ -57,7 +66,9 @@ function displayPosts(data) {
 		var time = moment(new Date(data[i].updated_time)); 
 		var message = data[i].message ? data[i].message : '[NO_MESSAGE_CONTENT]';
 		$('#posts').append(
-			$('<div>').attr('id', data[i].id)
+			$('<div>')
+			.attr('id', data[i].id)
+			.addClass('post')
 			.append(
 				$('<hr>')
 			).append(
@@ -66,11 +77,6 @@ function displayPosts(data) {
 					.attr('data-id', data[i].id)
 					.text(message)
 			).append(
-				$('<a>').attr({
-					'href': 'https://www.facebook.com/groups/' + data[i].id.replace('_', '/'),
-					'target': '_blank'
-				}).text('Open in Facebook')
-			).append(
 				$('<br>')
 			).append(
 				$('<b>').text(time.fromNow())
@@ -78,6 +84,11 @@ function displayPosts(data) {
 				$('<i>').addClass('pull-right').text(time.format("dddd, MMMM Do YYYY, h:mm:ss a"))
 			).append(
 				$('<h5>').addClass('location')
+			).append(
+				$('<a>').attr({
+					'href': 'https://www.facebook.com/groups/' + data[i].id.replace('_', '/'),
+					'target': '_blank'
+				}).text('Open in Facebook').addClass('btn btn-primary')
 			)
 		);
 		$('#posts').append($('<div>').addClass('clearfix'));
@@ -176,5 +187,22 @@ function handlers() {
 	$('input[name=gender]').click(function() {
 		var gender = $(this).val();
 		filter(gender, null);
+	});
+}
+
+function fetchDetails() {
+	$('.post').each(function() {
+		var id = $(this).attr('id');
+		FB.api('/' + id + '/comments', function(response) {
+			if (!response || response.error)
+				console.log(response.error);
+			else {
+				var interested = {};
+				for(var i = 0; i < response.data.length; i++) {
+					interested[response.data[i].id] = response.data[i].name;
+				}
+				$('#' + id).append($('<div>').addClass('badge pull-right').text(Object.keys(interested).length + ' people interested'));
+			}
+		});
 	});
 }
