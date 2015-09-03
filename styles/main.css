@@ -1,0 +1,19 @@
+hr {
+	border-color: #CCCCCC;
+}
+.location {
+	color: blue;
+}
+.message {
+	padding: 5px;
+	border-radius: 3px;
+}
+.male .message {
+	background-color: #99CCFF;
+}
+.female .message {
+	background-color: #FFCCFF;
+}
+.nogender .message {
+	background-color: #FFFFFF;
+}

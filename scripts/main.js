@@ -10,28 +10,29 @@ var showingLocation = 'all';
 var postedLocations = {};
 
 $(document).ready(function() {
-	$.ajaxSetup({
-		cache: true
-	});
-	$.getScript('http://connect.facebook.net/en_US/sdk.js', function() {
-		FB.init({
-			appId: '1468310293496346',
-			version: 'v2.4' 
-		});
-		$('#loginbutton,#feedbutton').removeAttr('disabled');
-		FB.getLoginStatus(function(response) {
-			if (response.status === 'connected') {
-				console.log('Logged in.');
-				onLogin();
-			} else {
-				FB.login(onLogin);
-			}
-		});
-	});
-	$.get('locations.csv', {}, function(response) {
+	$.get('data/locations.csv', {}, function(response) {
 		locations = response.split("\n");
 		for(var i = 0; i < locations.length; i++)
-			locations[i] = locations[i].substring(1, locations[i].length - 1).toLowerCase();
+			locations[i] = locations[i].substring(1, locations[i].length - 2).toLowerCase();
+			//locations[i] = locations[i].replace(/"/g, '').toLowerCase();
+		$.ajaxSetup({
+			cache: true
+		});
+		$.getScript('http://connect.facebook.net/en_US/sdk.js', function() {
+			FB.init({
+				appId: '1468310293496346',
+				version: 'v2.4' 
+			});
+			$('#loginbutton,#feedbutton').removeAttr('disabled');
+			FB.getLoginStatus(function(response) {
+				if (response.status === 'connected') {
+					console.log('Logged in.');
+					onLogin();
+				} else {
+					FB.login(onLogin);
+				}
+			});
+		});
 	});
 	handlers();
 	$.material.init();
@@ -116,9 +117,9 @@ function searchLocations() {
 			$(this).parent().addClass('nogender');
 		msgIds[id] = [];
 		for(var i = 0; i < locations.length; i++) {
-			if(text.indexOf(locations[i]) >= 0)
+			if(text.indexOf(locations[i]) >= 0) {
 				msgIds[id].push(locations[i]);
-			else {
+			} else {
 				// TODO levenshtein 
 			}
 		}
