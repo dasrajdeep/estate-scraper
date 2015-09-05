@@ -207,3 +207,5 @@ function fetchDetails() {
 		});
 	});
 }
+
+function saveSettings() {}

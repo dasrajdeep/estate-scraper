@@ -5,11 +5,13 @@
 	<link rel="stylesheet" href="vendor/bootstrap.min.css" />
 	<link rel="stylesheet" href="vendor/material/css/material.min.css" />
 	<link rel="stylesheet" href="styles/main.css" />
+	<script src="//cdnjs.cloudflare.com/ajax/libs/json2/20110223/json2.js"></script>
 	<script type="text/javascript" src="vendor/jquery.min.js"></script>
 	<script type="text/javascript" src="vendor/bootstrap.min.js"></script>
 	<script type="text/javascript" src="vendor/material/js/material.min.js"></script>
 	<script type="text/javascript" src="vendor/moment.min.js"></script>
 	<script type="text/javascript" src="vendor/levenshtein.min.js"></script>
+	<script type="text/javascript" src="vendor/jstorage.js"></script>
 	<script type="text/javascript" src="scripts/main.js"></script>
 </head>
 
