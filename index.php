@@ -1,49 +1,25 @@
-<html>
+<?php 
+require('facebook.php');
 
-<head>
-	<title>Estate Scraper</title>
-	<link rel="stylesheet" href="vendor/bootstrap.min.css" />
-	<link rel="stylesheet" href="vendor/material/css/material.min.css" />
-	<link rel="stylesheet" href="styles/main.css" />
-	<script src="//cdnjs.cloudflare.com/ajax/libs/json2/20110223/json2.js"></script>
-	<script type="text/javascript" src="vendor/jquery.min.js"></script>
-	<script type="text/javascript" src="vendor/bootstrap.min.js"></script>
-	<script type="text/javascript" src="vendor/material/js/material.min.js"></script>
-	<script type="text/javascript" src="vendor/moment.min.js"></script>
-	<script type="text/javascript" src="vendor/levenshtein.min.js"></script>
-	<script type="text/javascript" src="vendor/jstorage.js"></script>
-	<script type="text/javascript" src="scripts/main.js"></script>
-</head>
+$logged_in = true;
 
-<body>
-	<div class="container">
-		<h3 class="pull-right" id="num-posts"></h3>
-		<h1>
-			<span id="group-name"></span>
-			<br/>
-			<small>Recent Posts</small>
-		</h1>
-		<div class="clearfix"></div>
-		<div id="all-locations"></div>
-		<hr/>
-		<div class="radio radio-success">
-			<label>
-				<input type="radio" name="gender" value="male" /> Male
-			</label>
-			<label>
-				<input type="radio" name="gender" value="female" /> Female
-			</label>
-			<label>
-				<input type="radio" name="gender" value="nogender" /> Neutral
-			</label>
-			<label>
-				<input type="radio" name="gender" value="all" checked="checked" /> All
-			</label>
-		</div>
-		<div id="posts">
-			<div class="text-center"><img src="loader.gif" /></div>
-		</div>
-	</div>
-</body>
+if( isset($_SESSION['facebook_access_token']) ) {
+	$fb->setDefaultAccessToken($_SESSION['facebook_access_token']);
+	try {
+		$me = $fb->get('/me');
+		if(!$me)
+			$logged_in = false;
+	} catch(Facebook\Exceptions\FacebookApiException $e) {
+		$logged_in = false;
+	}
+} else {
+	$logged_in = false;
+}
 
-</html>
+if($logged_in) {
+	header('Location: /home.php');
+} else {
+	header('Location: /login.php');
+}
+
+?>

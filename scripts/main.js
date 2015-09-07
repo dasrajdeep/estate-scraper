@@ -1,5 +1,6 @@
 // Main script
 
+var token = null;
 var groupID = '263827920387171';
 var locations = null;
 var limit = 100;
@@ -10,53 +11,55 @@ var showingLocation = 'all';
 var postedLocations = {};
 
 $(document).ready(function() {
+	//loadLocations();
+	handlers();
+	$.material.init();
+	init();
+});
+
+function getPosts() {
+	$.get('/api.php', {action: 'posts'}, function(response) {
+		console.log(response);
+		displayPosts(response.posts.data);
+		locations = response.locations;
+		//searchLocations();
+		fetchPopularityDetails();
+		fetchGenderDetails();
+	});
+}
+
+function loadLocations() {
 	$.get('data/locations.csv', {}, function(response) {
 		locations = response.split("\n");
 		for(var i = 0; i < locations.length; i++)
-			locations[i] = locations[i].substring(1, locations[i].length - 2).toLowerCase();
-			//locations[i] = locations[i].replace(/"/g, '').toLowerCase();
-		$.ajaxSetup({
-			cache: true
+			locations[i] = locations[i].toLowerCase() + "";
+	});
+}
+
+function init() {
+	$.ajaxSetup({
+		cache: true
+	});
+	$.getScript('http://connect.facebook.net/en_US/sdk.js', function() {
+		FB.init({
+			appId: '1468310293496346',
+			version: 'v2.4' 
 		});
-		$.getScript('http://connect.facebook.net/en_US/sdk.js', function() {
-			FB.init({
-				appId: '1468310293496346',
-				version: 'v2.4' 
-			});
-			$('#loginbutton,#feedbutton').removeAttr('disabled');
-			FB.getLoginStatus(function(response) {
-				if (response.status === 'connected') {
-					console.log('Logged in.');
-					onLogin();
-				} else {
-					FB.login(onLogin);
-				}
-			});
+		$('#loginbutton,#feedbutton').removeAttr('disabled');
+		FB.getLoginStatus(function(response) {
+			if (response.status === 'connected') {
+				console.log('Logged in.');
+				token = $('#access-token').val();
+				onLogin();
+			} else {
+				FB.login(onLogin);
+			}
 		});
 	});
-	handlers();
-	$.material.init();
-});
+}
 
 function onLogin() {
-	FB.api('/' + groupID, function(response) {
-		if (!response || response.error)
-			console.log('An error occurred!');
-		else {
-			$('#group-name').text(response.name);
-		}	
-	});
-	FB.api('/' + groupID + '/feed', 'get', { limit: limit}, function(response) {
-		if (!response || response.error)
-			console.log('An error occurred!');
-		else {
-			var data = response.data;
-			var paging = response.paging;
-			displayPosts(data);
-			searchLocations();
-			fetchDetails();
-		}
-	});
+	getPosts();
 }
 
 function displayPosts(data) {
@@ -69,6 +72,7 @@ function displayPosts(data) {
 		$('#posts').append(
 			$('<div>')
 			.attr('id', data[i].id)
+			.attr('data-name', data[i].from.name)
 			.addClass('post')
 			.append(
 				$('<hr>')
@@ -80,7 +84,9 @@ function displayPosts(data) {
 			).append(
 				$('<br>')
 			).append(
-				$('<b>').text(time.fromNow())
+				$('<b>')
+					.append($('<i>').text(time.fromNow()))
+					.append($('<span>').text(' by ' + data[i].from.name))
 			).append(
 				$('<i>').addClass('pull-right').text(time.format("dddd, MMMM Do YYYY, h:mm:ss a"))
 			).append(
@@ -102,25 +108,14 @@ function searchLocations() {
 	$('.message').each(function() {
 		var text = $(this).text().toLowerCase();
 		var id = $(this).attr('data-id');
-		if(text.indexOf('female') >= 0 || text.indexOf('girl') >= 0)
-			$(this).parent().addClass('female');
-		else if(text.indexOf('male') >= 0 
-			|| text.indexOf('boy') >= 0 
-			|| text.indexOf('bachelor') >= 0 
-			|| text.indexOf('occup') >= 0 
-			|| text.indexOf('sharing') >= 0
-			|| text.indexOf('apartment') >= 0
-			|| text.indexOf('bhk') >= 0
-			|| text.indexOf('mate') >= 0)
-			$(this).parent().addClass('male');
-		else
-			$(this).parent().addClass('nogender');
 		msgIds[id] = [];
 		for(var i = 0; i < locations.length; i++) {
-			if(text.indexOf(locations[i]) >= 0) {
-				msgIds[id].push(locations[i]);
+			//if(text.indexOf(locations[i]) >= 0) {
+			if(new RegExp(locations[i]).test(text)) {
+				//msgIds[id].push(locations[i]);
+				console.log('yup');
 			} else {
-				// TODO levenshtein 
+				// TODO levenshtein
 			}
 		}
 		if(msgIds[id].length) {
@@ -191,10 +186,10 @@ function handlers() {
 	});
 }
 
-function fetchDetails() {
+function fetchPopularityDetails() {
 	$('.post').each(function() {
 		var id = $(this).attr('id');
-		FB.api('/' + id + '/comments', function(response) {
+		FB.api('/' + id + '/comments', {'access_token': token}, function(response) {
 			if (!response || response.error)
 				console.log(response.error);
 			else {
@@ -205,6 +200,43 @@ function fetchDetails() {
 				$('#' + id).append($('<div>').addClass('badge pull-right').text(Object.keys(interested).length + ' people interested'));
 			}
 		});
+	});
+}
+
+function fetchGenderDetails() {
+	var names = [];
+	$('.post').each(function() {
+		var id = $(this).attr('id');
+		var name = $(this).attr('data-name').split(" ");
+		names.push(name[0]);
+	});
+	var nameCSV = names[0];
+	for(var i = 1; i < names.length; i++)
+		nameCSV = nameCSV + ',' + names[i];
+	$.get('/api.php', {action: 'genders', names: nameCSV}, function(response) {
+		predictTargetGender(response);
+	});
+}
+
+function predictTargetGender(genderMap) {
+	$('.post').each(function() {
+		var name = $(this).attr('data-name').split(" ");
+		var gender = genderMap[name[0]];
+		var text = $(this).find('.message').text().toLowerCase();
+		if(text.indexOf('female') >= 0 || text.indexOf('girl') >= 0)
+			gender = 'female';
+		else if(text.indexOf('male') >= 0 
+			|| text.indexOf('boy') >= 0 
+			|| text.indexOf('bachelor') >= 0)
+			gender = 'male';
+		if(gender === null)
+			gender = 'nogender';
+		/*|| text.indexOf('occup') >= 0 
+		|| text.indexOf('sharing') >= 0
+		|| text.indexOf('apartment') >= 0
+		|| text.indexOf('bhk') >= 0
+		|| text.indexOf('mate') >= 0*/
+		$(this).addClass(gender);
 	});
 }
 
